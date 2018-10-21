@@ -54,6 +54,7 @@ namespace MemeScrapper
         {
             var alternativePath = Environment.GetEnvironmentVariable("MSEARCH_DATA");
             var path = alternativePath ?? dataFolder;
+            Console.WriteLine($"Writing to folder {path}");
             var converted = posts.Select(NineGagApi.ToMeme).ToList();
             var date = DateTimeOffset.UtcNow.ToString("yy-MM-dd-hh");
             TextExtensions.SaveJson($"{path}raw{date}.json", posts);
