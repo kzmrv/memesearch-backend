@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using Shared;
 
@@ -13,16 +12,15 @@ namespace WebApi
             this.client = client;
         }
 
-        public async Task<List<UnifiedMeme>> GetFeed()
+        public async Task<GetSearchFeedResponse> SearchFeed(GetSearchFeed query)
         {
-            var memes = await client.Get();
-            return memes;
-        }
+            var scroll = await client.Scroll(query.query, query.scrollId);
 
-        public async Task<List<UnifiedMeme>> SearchFeed(GetSearchFeed query)
-        {
-            var memes = await client.Search(query.query);
-            return memes;
+            return new GetSearchFeedResponse
+            {
+                scrollId = scroll.scrollId,
+                memeses = scroll.memes
+            };
         }
     }
 }

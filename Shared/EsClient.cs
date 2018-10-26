@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 
 using Elasticsearch.Net;
 
@@ -52,19 +53,83 @@ namespace Shared
             await client.DeleteIndexAsync(index);
         }
 
+        const string scrollTime = "1h";
+        public async Task<(string scrollId, List<UnifiedMeme> memes)> Scroll(string pattern = null, string scrollId = null)
+        {
+            var search = scrollId == null
+                ? await SearchByPattern(pattern, scrollTime)
+                : await client.ScrollAsync<UnifiedMeme>(scrollTime, scrollId);
+
+            var memes = search.Documents.ToList();
+            Decode(memes);
+            return (search.ScrollId, memes);
+        }
+
+        const int searchSize = 10;
         public async Task<List<UnifiedMeme>> Search(string pattern)
         {
-            var resp = await client.SearchAsync<UnifiedMeme>(s => s
+            var resp = await SearchByPattern(pattern);
+            var memes = resp.Documents.ToList();
+            Decode(memes);
+            return memes;
+        }
+
+        static void Decode(List<UnifiedMeme> memes)
+        {
+            foreach (var meme in memes)
+            {
+                meme.Title = HttpUtility.HtmlDecode(meme.Title);
+                meme.Tags = meme.Tags.Select(HttpUtility.HtmlDecode).ToArray();
+            }
+        }
+
+
+        Task<ISearchResponse<UnifiedMeme>> SearchByPattern(string pattern, string scrollTime = null)
+        {
+            var bq = new BoolQuery
+            {
+                Must = new List<QueryContainer>
+                {
+                    new QueryContainer(new MatchQuery
+                    {
+                        Field = "originalType",
+                        Query = "Photo",
+                    })
+                },
+            };
+
+            if (!string.IsNullOrWhiteSpace(pattern))
+            {
+                bq.Filter = new List<QueryContainer>
+                {
+                    new QueryContainer(
+                        new MatchQuery
+                        {
+                            Field = "title",
+                            Query = pattern
+                        })
+                };
+            }
+
+
+            return client.SearchAsync<UnifiedMeme>(s => s
+                .Scroll(scrollTime ?? Time.Zero)
                 .AllTypes()
                 .From(0)
-                .Take(10)
-                .Query(qry => qry
-                    .Bool(b => b
-                        .Must(m => m
-                            .QueryString(qs => qs
-                                .Query(pattern))))));
-
-            return resp.Documents.ToList();
+                .Take(searchSize)
+                .Query(descriptor => bq
+                //qry => qry
+                //.Bool(g=>g
+                //    .Must(m => m
+                //        .Match(mm => mm
+                //            .Field("originalType")
+                //            .Query("Photo")))
+                //    .Filter(m =>
+                //        m.Match(mm => mm
+                //            .Field(um => um.Title)
+                //            .Query(pattern)))
+                //)
+                ));
         }
     }
 }

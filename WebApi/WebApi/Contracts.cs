@@ -4,22 +4,15 @@ using Shared;
 
 namespace WebApi
 {
-    public class GetFeed
-    {
-    }
-
-    public class GetFeedResponse
-    {
-        public List<UnifiedMeme> Memes;
-    }
-
     public class GetSearchFeed
     {
         public string query { get; set; }
+        public string scrollId { get; set; }
     }
 
     public class GetSearchFeedResponse
     {
-        public List<UnifiedMeme> Memes;
+        public List<UnifiedMeme> memeses;
+        public string scrollId;
     }
 }

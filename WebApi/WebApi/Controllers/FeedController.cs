@@ -13,24 +13,11 @@ namespace WebApi.Controllers
             this.handlers = handlers;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetFeed()
-        {
-            var feed = await handlers.GetFeed();
-            return Ok(new GetFeedResponse
-            {
-                Memes = feed
-            });
-        }
-
         [HttpGet, Route("search")]
         public async Task<IActionResult> Search([FromQuery]GetSearchFeed req)
         {
-            var feed = await handlers.SearchFeed(req);
-            return Ok(new GetSearchFeedResponse
-            {
-                Memes = feed
-            });
+            var searchResult = await handlers.SearchFeed(req);
+            return Ok(searchResult);
         }
     }
 }
