@@ -53,6 +53,12 @@ namespace Shared
             await client.DeleteIndexAsync(index);
         }
 
+        public async Task<List<UnifiedMeme>> GetUnprocessed()
+        {
+            var memes = await SearchUnprocessed();
+            return memes.Documents.ToList();
+        }
+
         const string scrollTime = "1h";
         public async Task<(string scrollId, List<UnifiedMeme> memes)> Scroll(string pattern = null, string scrollId = null)
         {
@@ -83,6 +89,33 @@ namespace Shared
             }
         }
 
+        Task<ISearchResponse<UnifiedMeme>> SearchUnprocessed()
+        {
+            var bq = new BoolQuery
+            {
+                Must = new List<QueryContainer>
+                {
+                    new QueryContainer(new MatchQuery
+                    {
+                        Field = "originalType",
+                        Query = "Photo",
+                    }),
+                },
+                MustNot = new List<QueryContainer>
+                {
+                    new QueryContainer(new ExistsQuery
+                    {
+                        Field = "detectedText",
+                    }),
+                },
+            };
+
+            return client.SearchAsync<UnifiedMeme>(s => s
+                .AllTypes()
+                .From(0)
+                .Take(20)
+                .Query(descriptor => bq));
+        }
 
         Task<ISearchResponse<UnifiedMeme>> SearchByPattern(string pattern, string scrollTime = null)
         {
@@ -100,15 +133,10 @@ namespace Shared
 
             if (!string.IsNullOrWhiteSpace(pattern))
             {
-                bq.Filter = new List<QueryContainer>
-                {
-                    new QueryContainer(
-                        new MatchQuery
-                        {
-                            Field = "title",
-                            Query = pattern
-                        })
-                };
+                var filterDescriptor = new QueryContainerDescriptor<UnifiedMeme>();
+                var desc = filterDescriptor.MultiMatch(mm =>
+                    mm.Fields(um => um.Field("title").Field("detectedText")).Query(pattern));
+                bq.Filter = new List<QueryContainer> { desc };
             }
 
 
@@ -118,6 +146,7 @@ namespace Shared
                 .From(0)
                 .Take(searchSize)
                 .Query(descriptor => bq
+
                 //qry => qry
                 //.Bool(g=>g
                 //    .Must(m => m

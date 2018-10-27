@@ -15,6 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi", "WebApi\WebApi\Web
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{F8433893-FAD9-42A6-A632-79DF876F7B99}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextDetectorPoller", "TextDetectorPoller\TextDetectorPoller.csproj", "{4A744555-43EA-42BB-A0AA-88F816490A07}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F8433893-FAD9-42A6-A632-79DF876F7B99} = {F8433893-FAD9-42A6-A632-79DF876F7B99}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +38,10 @@ Global
 		{F8433893-FAD9-42A6-A632-79DF876F7B99}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8433893-FAD9-42A6-A632-79DF876F7B99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8433893-FAD9-42A6-A632-79DF876F7B99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A744555-43EA-42BB-A0AA-88F816490A07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A744555-43EA-42BB-A0AA-88F816490A07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A744555-43EA-42BB-A0AA-88F816490A07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A744555-43EA-42BB-A0AA-88F816490A07}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

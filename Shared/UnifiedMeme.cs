@@ -17,6 +17,7 @@ namespace Shared
         public string OriginalId;
         public string OriginalType;
         public int CommentsCount;
+        public string DetectedText;
         public string[] Tags;
     }
 
