@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 namespace MemeScrapper
 {
+    // Originally written to save downloaded images instead of just url's on the,
     public class BlobStorageService
     {
         readonly string directory;

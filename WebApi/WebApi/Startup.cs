@@ -19,7 +19,7 @@ namespace WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddSingleton<EsClient, EsClient>(provider => new EsClient(EsClient.MemesIndex, EsClient.Url));
+            services.AddSingleton<EsClient, EsClient>(provider => new EsClient(EsClient.MemesIndex, EsClient.LocalUrl));
             services.AddScoped<FeedHandlers, FeedHandlers>();
         }
 

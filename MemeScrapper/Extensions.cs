@@ -10,11 +10,11 @@ using Newtonsoft.Json.Converters;
 
 namespace MemeScrapper
 {
-    public static class TextExtensions
+    public static class DirectoryExtensions
     {
         static readonly JsonSerializerSettings settings;
 
-        static TextExtensions()
+        static DirectoryExtensions()
         {
             settings = new JsonSerializerSettings
             {

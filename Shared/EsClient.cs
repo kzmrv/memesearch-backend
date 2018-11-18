@@ -13,7 +13,7 @@ namespace Shared
     public class EsClient
     {
         public const string MemesIndex = "memes-idx";
-        public const string Url = "http://localhost:9200";
+        public const string LocalUrl = "http://localhost:9200";
         readonly ElasticClient client;
 
         public EsClient(string index, params string[] nodes)

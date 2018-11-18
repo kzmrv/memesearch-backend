@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
+using Serilog;
 
 using Shared;
 
@@ -13,18 +14,19 @@ namespace MemeScrapper
 {
     class Program
     {
+        static readonly ILogger log = Logging.Configure(nameof(MemeScrapper));
         static void Main(string[] args)
         {
+            log.Information("App started");
             var posts = CollectNineGagRecent().Result;
             SaveToFiles(posts);
-            Console.WriteLine("Completed");
+            log.Information("App finished");
             Console.ReadKey();
         }
 
-
         public static async Task<List<NineGagApi.Post>> CollectNineGagRecent()
         {
-            var type = NineGagApi.Fresh;
+            var feed = NineGagApi.Fresh;
             var api = new NineGagApi();
             var cursor = await api.GetCursor();
             var posts = new List<NineGagApi.Post>();
@@ -33,20 +35,24 @@ namespace MemeScrapper
             {
                 try
                 {
-                    var response = await api.CollectPage(cursor, type);
+                    var response = await api.CollectPage(cursor, feed);
                     posts.AddRange(response.data.posts);
                     var chars = response.data.nextCursor.TrimStart("after=").TakeWhile(c => c != '&').ToArray();
                     cursor = WebUtility.UrlDecode(new string(chars));
-                    Console.WriteLine($"Success for {i} page");
+                    log.Debug("Success for {PageNumber} page", i);
                 }
                 catch (Exception ex)
                 {
+                    log.Information(ex, "Stopped at {PageNumber} page");
                     break;
                 }
             }
 
-            var distinct = posts.Distinct(x => x.id).OrderByDescending(x => x.creationTs).ToList();
-            return distinct.ToList();
+            var distinctPosts = posts
+                .Distinct(x => x.id)
+                .OrderByDescending(x => x.creationTs)
+                .ToList();
+            return distinctPosts;
         }
 
         const string dataFolder = "c:\\\\temp\\9gag\\data\\";
@@ -54,20 +60,20 @@ namespace MemeScrapper
         {
             var alternativePath = Environment.GetEnvironmentVariable("MSEARCH_DATA");
             var path = alternativePath ?? dataFolder;
-            Console.WriteLine($"Writing to folder {path}");
+            log.Information("Writing to folder {Directory}", path);
             var converted = posts.Select(NineGagApi.ToMeme).ToList();
-            var date = DateTimeOffset.UtcNow.ToString("yy-MM-dd-hh");
-            TextExtensions.SaveJson($"{path}raw{date}.json", posts);
-            TextExtensions.SaveJson($"{path}converted{date}.json", converted);
+            var currentDate = DateTimeOffset.UtcNow.ToString("yy-MM-dd-hh");
+            DirectoryExtensions.SaveJson($"{path}raw{currentDate}.json", posts);
+            DirectoryExtensions.SaveJson($"{path}converted{currentDate}.json", converted);
         }
 
-        public static void DeleteAll()
+        public static void RemoveIndexHandle()
         {
             var es = GetClient();
             es.DeleteIndex(EsClient.MemesIndex).Wait();
         }
 
-        static EsClient GetClient() => new EsClient(EsClient.MemesIndex, EsClient.Url);
+        static EsClient GetClient() => new EsClient(EsClient.MemesIndex, EsClient.LocalUrl);
 
         public static void SaveToEs()
         {
@@ -76,7 +82,7 @@ namespace MemeScrapper
             var str = File.ReadAllText(path);
             var memes = JsonConvert.DeserializeObject<List<UnifiedMeme>>(str);
             GetClient().Save(memes).GetAwaiter().GetResult();
-            Console.WriteLine("Successfully saved to Elastic cluster!");
+            log.Information("Successfully saved to Elastic cluster!");
         }
     }
 }
