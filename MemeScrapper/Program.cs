@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Configuration;
+
 using Newtonsoft.Json;
 using Serilog;
 
@@ -18,20 +20,27 @@ namespace MemeScrapper
         static void Main(string[] args)
         {
             log.Information("App started");
-            var posts = CollectNineGagRecent().Result;
-            SaveToFiles(posts);
+            var config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json").Build();
+            var pages = int.Parse(config["pages"]);
+            var posts = CollectNineGagRecent(pages).Result;
+
+            //var savePath = config["savePath"];
+            //SaveToFiles(posts, savePath);
+
+            SaveToEs();
             log.Information("App finished");
             Console.ReadKey();
         }
 
-        public static async Task<List<NineGagApi.Post>> CollectNineGagRecent()
+        public static async Task<List<NineGagApi.Post>> CollectNineGagRecent(int pages)
         {
             var feed = NineGagApi.Fresh;
             var api = new NineGagApi();
             var cursor = await api.GetCursor();
             var posts = new List<NineGagApi.Post>();
             // limit ~ 6k posts
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < pages; i++)
             {
                 try
                 {
@@ -56,15 +65,16 @@ namespace MemeScrapper
         }
 
         const string dataFolder = "c:\\\\temp\\9gag\\data\\";
-        static void SaveToFiles(List<NineGagApi.Post> posts)
+        static void SaveToFiles(List<NineGagApi.Post> posts, string folder = dataFolder)
         {
-            var alternativePath = Environment.GetEnvironmentVariable("MSEARCH_DATA");
-            var path = alternativePath ?? dataFolder;
+            var envPath = Environment.GetEnvironmentVariable("MSEARCH_DATA");
+            var currentDate = DateTimeOffset.Now.ToString("yy-MM-dd-HH");
+            var path = envPath ?? folder;
             log.Information("Writing to folder {Directory}", path);
+            DirectoryExtensions.SaveJson(Path.Combine(path, $"raw{currentDate}.json"), posts);
+
             var converted = posts.Select(NineGagApi.ToMeme).ToList();
-            var currentDate = DateTimeOffset.UtcNow.ToString("yy-MM-dd-hh");
-            DirectoryExtensions.SaveJson($"{path}raw{currentDate}.json", posts);
-            DirectoryExtensions.SaveJson($"{path}converted{currentDate}.json", converted);
+            DirectoryExtensions.SaveJson(Path.Combine(path, $"converted{currentDate}.json"), converted);
         }
 
         public static void RemoveIndexHandle()

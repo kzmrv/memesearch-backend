@@ -15,7 +15,7 @@ namespace TextDetectorPoller
     {
         static void Main(string[] args)
         {
-            var client = new EsClient(EsClient.MemesIndex, EsClient.Url);
+            var client = new EsClient(EsClient.MemesIndex, EsClient.LocalUrl);
             var hasMore = true;
             while (hasMore)
             {

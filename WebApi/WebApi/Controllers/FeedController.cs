@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers
@@ -13,7 +12,7 @@ namespace WebApi.Controllers
             this.handlers = handlers;
         }
 
-        [HttpGet, Route("search")]
+        [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery]GetSearchFeed req)
         {
             var searchResult = await handlers.SearchFeed(req);
