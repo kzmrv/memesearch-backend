@@ -12,10 +12,24 @@ namespace MemeScrapper
     public class NineGagApi
     {
         const string Host = "https://9gag.com";
+        FlurlClient client = new FlurlClient(Host).EnableCookies();
+
+        NineGagApi()
+        {
+        }
+
+        public static async Task<NineGagApi> Init()
+        {
+            var api = new NineGagApi();
+            await Host.WithClient(api.client).GetAsync();
+            return api;
+        }
 
         public async Task<string> GetCursor()
         {
-            var html = await Host.GetStringAsync();
+            var html = await Host.
+                WithClient(client)
+                .GetStringAsync();
             var marker = "\"after=";
             var iof = html.IndexOf(marker, StringComparison.Ordinal);
             var cursor = html
@@ -31,6 +45,7 @@ namespace MemeScrapper
         public async Task<Response> CollectPage(string cursor, string type)
         {
             var response = await Host
+                .WithClient(client)
                 .AppendPathSegments("v1", "group-posts", "group", "default", "type", type)
                 .SetQueryParam("after", cursor)
                 .SetQueryParam("c", 50)
